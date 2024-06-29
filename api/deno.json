@@ -1,0 +1,13 @@
+{
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.4.7",
+    "zod": "https://deno.land/x/zod@v3.16.1/mod.ts"
+  },
+  "tasks": {
+    "start": "deno serve main.ts"
+  },
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "hono/jsx"
+  }
+}
