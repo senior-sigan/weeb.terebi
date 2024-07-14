@@ -1,5 +1,11 @@
 import { fetchJson } from "../../utils/fetcher.ts";
-import { SeriesResponse } from "./models.ts";
+import {
+  EpisodeResponse,
+  SeriesResponse,
+  SingleSeriesResponse,
+  TranslationsResponse,
+  ensureResponse,
+} from "./models.ts";
 
 export default class SmotretAnime {
   constructor(public baseURL: string = "https://smotret-anime.ru/") {}
@@ -15,7 +21,14 @@ export default class SmotretAnime {
     }
 
     const obj = await fetchJson(url, SeriesResponse);
-    return obj.data;
+
+    return ensureResponse(obj);
+  }
+
+  async fetchSeriesByID(seriesID: string) {
+    const url = new URL(`/api/series/${seriesID}`, this.baseURL);
+    const obj = await fetchJson(url, SingleSeriesResponse);
+    return ensureResponse(obj);
   }
 
   async search(query: string) {
@@ -23,6 +36,32 @@ export default class SmotretAnime {
     url.searchParams.set("query", query);
 
     const obj = await fetchJson(url, SeriesResponse);
-    return obj.data;
+    return ensureResponse(obj);
+  }
+
+  async fetchEpisode(episodeId: number) {
+    const url = new URL(`/api/episodes/${episodeId}`, this.baseURL);
+    const obj = await fetchJson(url, EpisodeResponse);
+    return ensureResponse(obj);
+  }
+
+  async fetchTranslations(afterId: number = 0) {
+    const url = new URL(`/api/translations/`, this.baseURL);
+    url.searchParams.set("feed", "id");
+    url.searchParams.set("limit", "1000");
+    url.searchParams.set("afterId", afterId.toString());
+    const obj = await fetchJson(url, TranslationsResponse);
+    return ensureResponse(obj);
+  }
+
+  async *fetchTranslationsIter(afterId: number = 0) {
+    let lastSaved = afterId;
+    while (true) {
+      const translations = await this.fetchTranslations(lastSaved);
+      for (const tr of translations) {
+        yield tr;
+        lastSaved = tr.id;
+      }
+    }
   }
 }
