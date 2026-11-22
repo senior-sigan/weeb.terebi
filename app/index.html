@@ -1,28 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="script-src 'self'; worker-src blob:"
-    />
-    <style>
-      body {
-        margin: 0;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #101725;
-        color: #faf6ea;
-        font-family: sans-serif;
-      }
-      h1 { margin: 0; font-size: 8vw; }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://smotret-anime.app; img-src 'self' https://smotret-anime.app; object-src 'none'" />
     <title>Weeb Terebi</title>
+    <link rel="stylesheet" href="app.css" />
+    <script defer src="app.js"></script>
   </head>
-  <body>
-    <main id="root"><h1>Hello, world!</h1></main>
-  </body>
+  <body><div id="root"></div></body>
 </html>

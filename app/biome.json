@@ -1,0 +1,8 @@
+{
+  "files": { "includes": ["**", "!**/dist"] },
+  "formatter": { "indentStyle": "space" },
+  "linter": {
+    "enabled": true,
+    "rules": { "complexity": { "useLiteralKeys": "off" } }
+  }
+}

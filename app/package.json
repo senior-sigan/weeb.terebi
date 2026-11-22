@@ -1,23 +1,25 @@
 {
   "name": "weebterebi",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "type": "module",
   "scripts": {
-    "build": "mkdir -p dist && cp config.xml index.html icon.jpg dist/ && cd dist && python3 -m zipfile -c weebterebi.wgt config.xml index.html icon.jpg",
+    "build": "tsc && node build.mjs",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "tv:install": "apps2samsung-cli install ./dist/weebterebi.wgt --tv 192.168.88.22 --launch",
-    "tv:remove": "apps2samsung-cli uninstall weebterebi.weebterebi --tv 192.168.88.22",
-    "dev": "node esbuild.config.js --watch",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "tv:remove": "apps2samsung-cli uninstall weebterebi.weebterebi --tv 192.168.88.22"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@jellyfin/libass-wasm": "4.2.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "video.js": "10.6.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
     "esbuild": "0.28.2",
     "typescript": "7.0.2"
   }

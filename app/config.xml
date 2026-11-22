@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
         id="http://senior-sigan.net/weebterebi" version="1.0.0" viewmodes="fullscreen">
-    <tizen:application id="weebterebi.weebterebi" package="weebterebi" required_version="5.0"/>
+    <tizen:application id="weebterebi.weebterebi" package="weebterebi" required_version="5.5"/>
     <name>weebterebi</name>
     <author href="http://senior-sigan.net">senior_sigan</author>
     <license>MIT</license>
+    <access origin="https://smotret-anime.app"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
     <content src="index.html"/>
     <icon src="icon.jpg"/>
     <tizen:profile name="tv-samsung"/>

@@ -22,3 +22,13 @@ npm ci
 [tasks.electron]
 depends = ["build"]
 run = "npm --prefix electron start --"
+
+[tasks."app:install"]
+dir = "app"
+run = "npm ci"
+
+[tasks.lint]
+run = "npm --prefix app run lint"
+
+[tasks.format]
+run = "npm --prefix app run format"
