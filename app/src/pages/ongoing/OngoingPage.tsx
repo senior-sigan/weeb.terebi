@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useState } from "react";
-import { AnimeDetails } from "../../entities/anime/AnimeDetails";
 import { type Anime, fetchOngoing } from "../../entities/anime/catalog";
 import { Poster } from "../../entities/anime/Poster";
 import { Sidebar } from "../../widgets/sidebar/Sidebar";
+import { WatchDialog } from "../../widgets/watch/WatchDialog";
 
 const columns = 5;
 const arrowKeys: Readonly<Record<number, string>> = {
@@ -50,7 +50,7 @@ export function OngoingPage() {
     panel === "menu"
       ? "catalog-menu"
       : panel === "details"
-        ? "close-details"
+        ? null
         : anime
           ? `anime-${anime.id}`
           : catalog.kind === "loading"
@@ -61,6 +61,7 @@ export function OngoingPage() {
   }, [focusId]);
 
   useEffect(() => {
+    if (panel === "details") return;
     function keydown(event: KeyboardEvent) {
       if (event.key === "Enter" || event.keyCode === 13) {
         event.preventDefault();
@@ -89,12 +90,6 @@ export function OngoingPage() {
         if (key === "ArrowUp") document.getElementById("catalog-menu")?.focus();
         if (key === "ArrowDown")
           document.getElementById("refresh-menu")?.focus();
-      } else if (panel === "details") {
-        const description = document.getElementById("description");
-        if (description && (key === "ArrowUp" || key === "ArrowDown")) {
-          description.scrollTop +=
-            (key === "ArrowUp" ? -1 : 1) * description.clientHeight * 0.7;
-        }
       } else if (key === "ArrowLeft" && index % columns === 0) setPanel("menu");
       else if (key === "ArrowLeft") setIndex(index - 1);
       else if (
@@ -190,7 +185,7 @@ export function OngoingPage() {
         </footer>
       </main>
       {panel === "details" && anime && (
-        <AnimeDetails anime={anime} onClose={() => setPanel("grid")} />
+        <WatchDialog anime={anime} onClose={() => setPanel("grid")} />
       )}
     </>
   );

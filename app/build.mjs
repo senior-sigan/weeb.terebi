@@ -22,8 +22,28 @@ await build({
 });
 const assets = ["config.xml", "index.html", "icon.jpg"];
 await Promise.all(assets.map((file) => copyFile(file, `dist/${file}`)));
+const libass = "node_modules/@jellyfin/libass-wasm/dist/js";
+await mkdir("dist/libass", { recursive: true });
+for (const name of [
+  "subtitles-octopus-worker.js",
+  "subtitles-octopus-worker-legacy.js",
+  "subtitles-octopus-worker.wasm",
+  "default.woff2",
+  "COPYRIGHT",
+]) {
+  await copyFile(`${libass}/${name}`, `dist/libass/${name}`);
+}
 execFileSync(
   "python3",
-  ["-m", "zipfile", "-c", "weebterebi.wgt", ...assets, "app.js", "app.css"],
+  [
+    "-m",
+    "zipfile",
+    "-c",
+    "weebterebi.wgt",
+    ...assets,
+    "app.js",
+    "app.css",
+    "libass",
+  ],
   { cwd: "dist" },
 );

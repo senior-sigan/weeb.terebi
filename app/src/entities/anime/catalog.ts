@@ -1,5 +1,4 @@
-declare const __ACCESS_TOKEN__: string;
-
+import { api, record, text } from "../../shared/api/anime365";
 export interface Anime {
   id: number;
   title: string;
@@ -10,14 +9,6 @@ export interface Anime {
   genres: string;
   synopsis: string;
   score: string;
-}
-
-function record(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null ? { ...value } : {};
-}
-
-function text(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
 }
 
 function parseAnime(value: unknown): Anime {
@@ -54,33 +45,14 @@ function parseAnime(value: unknown): Anime {
   };
 }
 
-export function fetchOngoing(): Promise<Anime[]> {
-  const fields =
-    "id,titles,title,posterUrl,posterUrlSmall,typeTitle,season,genres,descriptions,myAnimeListScore";
-  const query = new URLSearchParams({
+export async function fetchOngoing(): Promise<Anime[]> {
+  const data = await api("series", {
     isAiring: "1",
     isActive: "1",
-    fields,
     limit: "1000",
-    access_token: __ACCESS_TOKEN__,
+    fields:
+      "id,titles,title,posterUrl,posterUrlSmall,typeTitle,season,genres,descriptions,myAnimeListScore",
   });
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", `https://smotret-anime.app/api/series?${query}`);
-    xhr.responseType = "json";
-    xhr.timeout = 20000;
-    xhr.onerror = xhr.ontimeout = () =>
-      reject(new Error("Нет связи с Anime 365"));
-    xhr.onload = () => {
-      try {
-        const data = record(xhr.response)["data"];
-        if (xhr.status !== 200 || !Array.isArray(data))
-          throw new Error("Anime 365 не вернул каталог");
-        resolve(data.map(parseAnime));
-      } catch (error) {
-        reject(error);
-      }
-    };
-    xhr.send();
-  });
+  if (!Array.isArray(data)) throw new Error("Некорректный каталог");
+  return data.map(parseAnime);
 }
