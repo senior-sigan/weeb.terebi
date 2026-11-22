@@ -45,14 +45,21 @@ function parseAnime(value: unknown): Anime {
   };
 }
 
-export async function fetchOngoing(): Promise<Anime[]> {
+async function fetchSeries(params: Record<string, string>): Promise<Anime[]> {
   const data = await api("series", {
-    isAiring: "1",
+    ...params,
     isActive: "1",
-    limit: "1000",
     fields:
       "id,titles,title,posterUrl,posterUrlSmall,typeTitle,season,genres,descriptions,myAnimeListScore",
   });
   if (!Array.isArray(data)) throw new Error("Некорректный каталог");
   return data.map(parseAnime);
+}
+
+export function fetchOngoing() {
+  return fetchSeries({ isAiring: "1", limit: "1000" });
+}
+
+export function searchAnime(query: string) {
+  return fetchSeries({ query, limit: "36" });
 }
