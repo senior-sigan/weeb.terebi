@@ -24,11 +24,33 @@ export async function episodes(id: number): Promise<Choice[]> {
         Number(b["episodeType"] === "preview") ||
       Number(a["episodeInt"]) - Number(b["episodeInt"]),
   );
-  return rows.map((row) => ({
+  return rows.map(episodeChoice);
+}
+
+function episodeChoice(row: Record<string, unknown>): Choice {
+  return {
     id: numericId(row),
     title: text(row["episodeFull"]) || `Серия ${row["episodeInt"]}`,
     detail: text(row["episodeTitle"]),
-  }));
+  };
+}
+
+export function findPublishedEpisode(
+  series: Record<string, unknown>,
+  number: number,
+): Choice | undefined {
+  const type = series["type"];
+  const rows = activeRows(series, "episodes");
+  const row = rows.find((row) => {
+    const episodeType = row["episodeType"];
+    return (
+      row["episodeInt"] === number &&
+      row["isFirstUploaded"] === 1 &&
+      (episodeType === type ||
+        (type === "special" && episodeType === "tv_special"))
+    );
+  });
+  return row && episodeChoice(row);
 }
 
 function numericId(row: Record<string, unknown>) {

@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import type { Anime } from "../../entities/anime/catalog";
+import type { AnimeTile } from "../../entities/anime/catalog";
 import { Poster } from "../../entities/anime/Poster";
 import { remoteKey } from "../../shared/tv/remote";
 import { WatchDialog } from "../watch/WatchDialog";
 
 interface Props {
-  items: Anime[];
+  items: AnimeTile[];
   label: string;
   active: boolean;
   onMenu: () => void;
@@ -23,7 +23,7 @@ export function AnimeGrid({
 }: Props) {
   const grid = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
-  const [opened, setOpened] = useState<Anime | null>(null);
+  const [opened, setOpened] = useState<AnimeTile | null>(null);
   const columns = 5;
 
   useLayoutEffect(() => {
@@ -87,12 +87,20 @@ export function AnimeGrid({
                 <Poster src={item.thumbnail} />
               </span>
               <span className="tile-title">{item.title}</span>
-              <span className="meta">{item.edition}</span>
+              <span className="meta">
+                {item.nextEpisode?.title || item.edition}
+              </span>
             </button>
           ))}
         </div>
       </section>
-      {opened && <WatchDialog anime={opened} onClose={() => setOpened(null)} />}
+      {opened && (
+        <WatchDialog
+          anime={opened}
+          startEpisode={opened.nextEpisode}
+          onClose={() => setOpened(null)}
+        />
+      )}
     </>
   );
 }

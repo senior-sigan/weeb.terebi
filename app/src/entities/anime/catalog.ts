@@ -1,4 +1,6 @@
-import { api, record, text } from "../../shared/api/anime365";
+import { api, publicApi, record, text } from "../../shared/api/anime365";
+import { type Choice, findPublishedEpisode } from "../episode/playback";
+
 export interface Anime {
   id: number;
   title: string;
@@ -10,6 +12,11 @@ export interface Anime {
   synopsis: string;
   score: string;
 }
+
+export type AnimeTile = Anime & { nextEpisode?: Choice };
+
+const seriesFields =
+  "id,titles,title,posterUrl,posterUrlSmall,typeTitle,season,genres,descriptions,myAnimeListScore";
 
 function parseAnime(value: unknown): Anime {
   const item = record(value);
@@ -49,13 +56,29 @@ async function fetchSeries(params: Record<string, string>): Promise<Anime[]> {
   const data = await api("series", {
     ...params,
     isActive: "1",
-    fields:
-      "id,titles,title,posterUrl,posterUrlSmall,typeTitle,season,genres,descriptions,myAnimeListScore",
+    fields: seriesFields,
   });
   if (!Array.isArray(data)) throw new Error("Некорректный каталог");
   return data.map(parseAnime);
 }
 
+export async function fetchNextEpisode(
+  myAnimeListId: number,
+  episodeNumber: number,
+): Promise<AnimeTile | null> {
+  const data = await publicApi("series", {
+    myAnimeListId: String(myAnimeListId),
+    isActive: "1",
+    fields: `${seriesFields},myAnimeListId,type,episodes`,
+  });
+  if (!Array.isArray(data)) throw new Error("Некорректный каталог");
+  for (const series of data.map(record)) {
+    if (series["myAnimeListId"] !== myAnimeListId) continue;
+    const nextEpisode = findPublishedEpisode(series, episodeNumber);
+    if (nextEpisode) return { ...parseAnime(series), nextEpisode };
+  }
+  return null;
+}
 export function fetchOngoing() {
   return fetchSeries({ isAiring: "1", limit: "1000" });
 }

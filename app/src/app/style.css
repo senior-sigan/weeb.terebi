@@ -102,6 +102,11 @@ h1 {
   font-size: 1.13vw;
   font-variant-numeric: tabular-nums;
 }
+.catalog-notice {
+  margin-left: 1.1vw;
+  color: var(--muted);
+  font-size: 1.13vw;
+}
 .scroller {
   flex: 1;
   overflow-y: auto;
@@ -245,6 +250,26 @@ kbd {
 .grid-icon i {
   background: currentColor;
   border-radius: 0.1vw;
+}
+.home-icon {
+  position: relative;
+  width: 1.1vw;
+  height: 0.9vw;
+  margin: 0.45vw 1.46vw 0;
+  border: 0.14vw solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 0.12vw 0.12vw;
+}
+.home-icon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.48vw;
+  width: 0.78vw;
+  height: 0.78vw;
+  border-top: 0.14vw solid currentColor;
+  border-left: 0.14vw solid currentColor;
+  transform: translateX(-50%) rotate(45deg);
 }
 .rail-item {
   margin-bottom: 0.35vw;

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { OngoingPage } from "../pages/ongoing/OngoingPage";
+import { CatalogPage } from "../pages/catalog/CatalogPage";
 import { SearchPage } from "../pages/search/SearchPage";
 import { remoteKey } from "../shared/tv/remote";
 import { type Section, Sidebar } from "../widgets/sidebar/Sidebar";
 
 export function App() {
-  const [section, setSection] = useState<Section>("ongoing");
+  const [section, setSection] = useState<Section>("home");
   const [menu, setMenu] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -49,10 +49,15 @@ export function App() {
           </div>
           <span className="source">Anime 365</span>
         </header>
-        {section === "ongoing" ? (
-          <OngoingPage key={revision} active={!menu} onMenu={openMenu} />
-        ) : (
+        {section === "search" ? (
           <SearchPage active={!menu} onMenu={openMenu} />
+        ) : (
+          <CatalogPage
+            key={`${section}-${revision}`}
+            section={section}
+            active={!menu}
+            onMenu={openMenu}
+          />
         )}
         <footer>
           <span>

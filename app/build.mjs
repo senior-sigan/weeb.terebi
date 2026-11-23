@@ -5,6 +5,14 @@ import { build } from "esbuild";
 process.loadEnvFile("../.env");
 const token = process.env.ACCESS_TOKEN?.trim();
 if (!token) throw new Error("Укажите ACCESS_TOKEN в .env в корне проекта");
+const shikimoriUserId = process.env.SHIKIMORI_USER_ID?.trim() ?? "";
+if (
+  shikimoriUserId &&
+  (!/^\d+$/.test(shikimoriUserId) ||
+    !Number.isSafeInteger(Number(shikimoriUserId)) ||
+    Number(shikimoriUserId) < 1)
+)
+  throw new Error("SHIKIMORI_USER_ID должен быть положительным целым числом");
 
 await mkdir("dist", { recursive: true });
 await build({
@@ -17,6 +25,7 @@ await build({
   supported: { destructuring: true },
   define: {
     __ACCESS_TOKEN__: JSON.stringify(token),
+    __SHIKIMORI_USER_ID__: JSON.stringify(shikimoriUserId),
     "process.env.NODE_ENV": '"production"',
   },
 });

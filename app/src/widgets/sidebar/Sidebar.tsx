@@ -1,7 +1,13 @@
 import { useLayoutEffect, useRef } from "react";
 import { remoteKey } from "../../shared/tv/remote";
 
-export type Section = "ongoing" | "search";
+const menuItems = [
+  { section: "home", title: "Главная" },
+  { section: "catalog", title: "Список аниме" },
+  { section: "search", title: "Поиск" },
+] as const;
+
+export type Section = (typeof menuItems)[number]["section"];
 interface Props {
   section: Section;
   open: boolean;
@@ -69,35 +75,32 @@ export function Sidebar({
             ☰
           </span>
         </button>
-        {(["ongoing", "search"] as const).map((item) => {
-          const title = item === "ongoing" ? "Онгоинги" : "Поиск";
-          return (
-            <button
-              key={item}
-              id={item === "ongoing" ? "catalog-menu" : "search-menu"}
-              type="button"
-              className={section === item ? "rail-item current" : "rail-item"}
-              aria-current={section === item ? "page" : undefined}
-              aria-label={title}
-              tabIndex={open ? 0 : -1}
-              onClick={open ? () => onSelect(item) : onOpen}
-              onKeyDown={menuKey}
-            >
-              {item === "ongoing" ? (
-                <span className="grid-icon" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </span>
-              ) : (
-                <span className="search-icon" aria-hidden="true" />
-              )}
-              {open && title}
-            </button>
-          );
-        })}
-        {open && section === "ongoing" && (
+        {menuItems.map(({ section: item, title }) => (
+          <button
+            key={item}
+            id={`${item}-menu`}
+            type="button"
+            className={section === item ? "rail-item current" : "rail-item"}
+            aria-current={section === item ? "page" : undefined}
+            aria-label={title}
+            tabIndex={open ? 0 : -1}
+            onClick={open ? () => onSelect(item) : onOpen}
+            onKeyDown={menuKey}
+          >
+            {item === "catalog" ? (
+              <span className="grid-icon" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+            ) : (
+              <span className={`${item}-icon`} aria-hidden="true" />
+            )}
+            {open && title}
+          </button>
+        ))}
+        {open && section !== "search" && (
           <button
             id="refresh-menu"
             className="rail-item"

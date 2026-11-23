@@ -30,8 +30,11 @@ export function request(url: string, type: "json" | "text"): Promise<unknown> {
 }
 
 export async function api(path: string, params: Record<string, string> = {}) {
+  return publicApi(path, { ...params, access_token: __ACCESS_TOKEN__ });
+}
+
+export async function publicApi(path: string, params: Record<string, string>) {
   const query = new URLSearchParams(params);
-  query.set("access_token", __ACCESS_TOKEN__);
   const result = record(
     await request(`${origin}/api/${path}?${query}`, "json"),
   );

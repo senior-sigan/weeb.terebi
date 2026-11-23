@@ -15,12 +15,18 @@ type Screen =
 
 export function WatchDialog({
   anime,
+  startEpisode,
   onClose,
 }: {
   anime: Anime;
+  startEpisode: Choice | undefined;
   onClose: () => void;
 }) {
-  const [screen, setScreen] = useState<Screen>({ kind: "episodes" });
+  const [screen, setScreen] = useState<Screen>(
+    startEpisode
+      ? { kind: "translations", episode: startEpisode }
+      : { kind: "episodes" },
+  );
   const info = useRef<HTMLDivElement>(null);
   const lastButton = useRef<HTMLButtonElement | null>(null);
   function back() {
