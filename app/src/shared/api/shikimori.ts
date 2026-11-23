@@ -1,8 +1,35 @@
-import { record, request } from "./anime365";
+import { record, request, text } from "./anime365";
 
 declare const __SHIKIMORI_USER_ID__: string;
 
 export const hasShikimoriProfile = Boolean(__SHIKIMORI_USER_ID__);
+
+export interface AnimeProfile {
+  synopsis: string;
+  tags: string[];
+}
+
+export async function fetchAnimeProfile(id: number): Promise<AnimeProfile> {
+  const data = record(
+    await request(`https://shikimori.io/api/animes/${id}`, "json"),
+  );
+  const description = document.createElement("template");
+  description.innerHTML = text(data["description_html"]).replace(
+    /<br\s*\/?>|<\/p>/gi,
+    "\n",
+  );
+  const genres = data["genres"];
+  const tags = Array.isArray(genres)
+    ? genres
+        .map((value: unknown) => text(record(value)["russian"]))
+        .filter(Boolean)
+    : [];
+  return {
+    synopsis:
+      text(description.content.textContent) || text(data["description"]),
+    tags: [...new Set(tags)],
+  };
+}
 
 interface Watching {
   animeId: number;

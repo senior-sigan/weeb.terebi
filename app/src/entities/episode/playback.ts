@@ -6,17 +6,19 @@ export interface Choice {
   detail: string;
 }
 
+export interface Episode extends Choice {
+  artworkNumber: number | null;
+}
+
 function activeRows(data: unknown, key: string) {
   const list = record(data)[key];
   if (!Array.isArray(list)) throw new Error("Некорректный ответ Anime 365");
   return list.map(record).filter((row) => row["isActive"] === 1);
 }
 
-export async function episodes(id: number): Promise<Choice[]> {
-  const rows = activeRows(
-    await api(`series/${id}`, { fields: "episodes" }),
-    "episodes",
-  );
+export async function episodes(id: number): Promise<Episode[]> {
+  const series = record(await api(`series/${id}`, { fields: "type,episodes" }));
+  const rows = activeRows(series, "episodes");
   // The API includes trailers among numbered episodes.
   rows.sort(
     (a, b) =>
@@ -24,7 +26,18 @@ export async function episodes(id: number): Promise<Choice[]> {
         Number(b["episodeType"] === "preview") ||
       Number(a["episodeInt"]) - Number(b["episodeInt"]),
   );
-  return rows.map(episodeChoice);
+  return rows.map((row) => {
+    const number = row["episodeInt"];
+    return {
+      ...episodeChoice(row),
+      artworkNumber:
+        typeof number === "number" &&
+        number >= 1 &&
+        isMainEpisode(series["type"], row["episodeType"])
+          ? number
+          : null,
+    };
+  });
 }
 
 function episodeChoice(row: Record<string, unknown>): Choice {
@@ -42,15 +55,21 @@ export function findPublishedEpisode(
   const type = series["type"];
   const rows = activeRows(series, "episodes");
   const row = rows.find((row) => {
-    const episodeType = row["episodeType"];
     return (
       row["episodeInt"] === number &&
       row["isFirstUploaded"] === 1 &&
-      (episodeType === type ||
-        (type === "special" && episodeType === "tv_special"))
+      isMainEpisode(type, row["episodeType"])
     );
   });
   return row && episodeChoice(row);
+}
+
+function isMainEpisode(seriesType: unknown, episodeType: unknown) {
+  return (
+    typeof seriesType === "string" &&
+    (episodeType === seriesType ||
+      (seriesType === "special" && episodeType === "tv_special"))
+  );
 }
 
 function numericId(row: Record<string, unknown>) {

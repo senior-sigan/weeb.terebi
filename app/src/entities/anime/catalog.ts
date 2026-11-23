@@ -3,20 +3,19 @@ import { type Choice, findPublishedEpisode } from "../episode/playback";
 
 export interface Anime {
   id: number;
+  myAnimeListId: number | null;
   title: string;
   original: string;
   poster: string;
   thumbnail: string;
   edition: string;
-  genres: string;
-  synopsis: string;
   score: string;
 }
 
 export type AnimeTile = Anime & { nextEpisode?: Choice };
 
 const seriesFields =
-  "id,titles,title,posterUrl,posterUrlSmall,typeTitle,season,genres,descriptions,myAnimeListScore";
+  "id,myAnimeListId,titles,title,posterUrl,posterUrlSmall,typeTitle,season,myAnimeListScore";
 
 function parseAnime(value: unknown): Anime {
   const item = record(value);
@@ -26,12 +25,17 @@ function parseAnime(value: unknown): Anime {
   const id = item["id"];
   if (typeof id !== "number" || !title)
     throw new Error("Некорректная карточка в каталоге");
-  const genres = item["genres"];
-  const descriptions = item["descriptions"];
+  const myAnimeListId = item["myAnimeListId"];
   const rating = item["myAnimeListScore"];
   const poster = text(item["posterUrl"]);
   return {
     id,
+    myAnimeListId:
+      typeof myAnimeListId === "number" &&
+      Number.isSafeInteger(myAnimeListId) &&
+      myAnimeListId > 0
+        ? myAnimeListId
+        : null,
     title,
     original: text(titles["romaji"]),
     poster,
@@ -39,15 +43,6 @@ function parseAnime(value: unknown): Anime {
     edition: [text(item["typeTitle"]), text(item["season"])]
       .filter(Boolean)
       .join("  ·  "),
-    genres: Array.isArray(genres)
-      ? genres
-          .map((g: unknown) => text(record(g)["title"]))
-          .filter(Boolean)
-          .join(" · ")
-      : "",
-    synopsis: Array.isArray(descriptions)
-      ? text(record(descriptions[0])["value"])
-      : "",
     score: typeof rating === "number" && rating > 0 ? rating.toFixed(2) : "",
   };
 }
@@ -69,7 +64,7 @@ export async function fetchNextEpisode(
   const data = await publicApi("series", {
     myAnimeListId: String(myAnimeListId),
     isActive: "1",
-    fields: `${seriesFields},myAnimeListId,type,episodes`,
+    fields: `${seriesFields},type,episodes`,
   });
   if (!Array.isArray(data)) throw new Error("Некорректный каталог");
   for (const series of data.map(record)) {

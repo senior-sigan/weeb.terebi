@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Choice } from "../../entities/episode/playback";
+import { remoteKey } from "../../shared/tv/remote";
 
 interface Props {
   id: number;
@@ -56,19 +57,29 @@ export function ChoiceList({
 
   return (
     <section hidden={!visible} className="choice-panel">
-      <h3>{heading}</h3>
+      <h3>Переводы</h3>
+      <p className="choice-episode">{heading}</p>
       <fieldset
-        aria-label={heading}
+        aria-label="Переводы"
         className="choice-list"
         ref={list}
         onKeyDown={(event) => {
-          const step = event.keyCode === 38 ? -1 : event.keyCode === 40 ? 1 : 0;
+          const key = remoteKey(event);
+          const step =
+            key === "ArrowUp" || (key === "Tab" && event.shiftKey)
+              ? -1
+              : key === "ArrowDown" || key === "Tab"
+                ? 1
+                : 0;
           if (!step || !list.current) return;
           event.preventDefault();
           const buttons = list.current.querySelectorAll("button");
-          buttons[
-            Math.max(0, Math.min(buttons.length - 1, selected.current + step))
-          ]?.focus();
+          const next = selected.current + step;
+          const index =
+            key === "Tab"
+              ? (next + buttons.length) % buttons.length
+              : Math.max(0, Math.min(buttons.length - 1, next));
+          buttons[index]?.focus();
         }}
       >
         {result.kind === "loading" && <p role="status">Загрузка…</p>}
