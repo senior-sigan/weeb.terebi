@@ -1,6 +1,10 @@
 import { useState } from "react";
 import type { Anime } from "../../entities/anime/catalog";
-import { type Choice, translations } from "../../entities/episode/playback";
+import {
+  type Choice,
+  type Episode,
+  translations,
+} from "../../entities/episode/playback";
 import { remoteKey } from "../../shared/tv/remote";
 import { ChoiceList } from "./ChoiceList";
 import { Player } from "./Player";
@@ -8,8 +12,8 @@ import { SeriesPage } from "./SeriesPage";
 
 type Screen =
   | { kind: "episodes" }
-  | { kind: "translations"; episode: Choice }
-  | { kind: "player"; episode: Choice; translation: Choice };
+  | { kind: "translations"; episode: Episode }
+  | { kind: "player"; episode: Episode; translation: Choice };
 
 export function WatchDialog({
   anime,
@@ -21,6 +25,13 @@ export function WatchDialog({
   onClose: () => void;
 }) {
   const [screen, setScreen] = useState<Screen>({ kind: "episodes" });
+  const number = screen.kind === "player" ? screen.episode.mainNumber : null;
+  const progress =
+    anime.myAnimeListId !== null &&
+    number !== null &&
+    Number.isSafeInteger(number)
+      ? { animeId: anime.myAnimeListId, episode: number }
+      : null;
   function back() {
     if (screen.kind === "player")
       setScreen({ kind: "translations", episode: screen.episode });
@@ -86,6 +97,7 @@ export function WatchDialog({
         <Player
           id={screen.translation.id}
           title={`${anime.title} · ${screen.episode.title} · ${screen.translation.title}`}
+          progress={progress}
           onBack={back}
         />
       )}

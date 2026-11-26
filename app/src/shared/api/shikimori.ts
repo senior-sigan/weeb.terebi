@@ -1,8 +1,11 @@
 import { record, request, text } from "./anime365";
+import { shikimoriAccount, shikimoriApi } from "./shikimoriSession";
 
 declare const __SHIKIMORI_USER_ID__: string;
 
-export const hasShikimoriProfile = Boolean(__SHIKIMORI_USER_ID__);
+export function hasShikimoriProfile() {
+  return Boolean(shikimoriAccount() || __SHIKIMORI_USER_ID__);
+}
 
 export interface AnimeProfile {
   synopsis: string;
@@ -38,45 +41,41 @@ interface Watching {
 }
 
 export async function fetchWatching(): Promise<Watching[]> {
-  const limit = 100;
+  const account = shikimoriAccount();
+  const userId = account ? String(account.id) : __SHIKIMORI_USER_ID__;
+  if (!userId) return [];
+  const query = new URLSearchParams({
+    user_id: userId,
+    target_type: "Anime",
+    status: "watching",
+  });
+  const path = `v2/user_rates?${query}`;
+  const data = account
+    ? await shikimoriApi(account, path)
+    : await request(`https://shikimori.io/api/${path}`, "json");
+  if (!Array.isArray(data)) throw new Error("Некорректный список Shikimori");
   const watching: Watching[] = [];
-
-  for (let page = 1; ; page += 1) {
-    const query = new URLSearchParams({
-      user_id: __SHIKIMORI_USER_ID__,
-      target_type: "Anime",
-      status: "watching",
-      limit: String(limit),
-      page: String(page),
-    });
-    const data = await request(
-      `https://shikimori.io/api/v2/user_rates?${query}`,
-      "json",
-    );
-    if (!Array.isArray(data)) throw new Error("Некорректный список Shikimori");
-    for (const value of data) {
-      const row = record(value);
-      const animeId = row["target_id"];
-      const watched = row["episodes"];
-      const updated = row["updated_at"];
-      if (
-        row["status"] === "watching" &&
-        row["target_type"] === "Anime" &&
-        typeof animeId === "number" &&
-        Number.isSafeInteger(animeId) &&
-        animeId > 0 &&
-        typeof watched === "number" &&
-        Number.isSafeInteger(watched) &&
-        watched >= 0
-      ) {
-        watching.push({
-          animeId,
-          watched,
-          updatedAt: typeof updated === "string" ? Date.parse(updated) || 0 : 0,
-        });
-      }
+  for (const value of data) {
+    const row = record(value);
+    const animeId = row["target_id"];
+    const watched = row["episodes"];
+    const updated = row["updated_at"];
+    if (
+      row["status"] === "watching" &&
+      row["target_type"] === "Anime" &&
+      typeof animeId === "number" &&
+      Number.isSafeInteger(animeId) &&
+      animeId > 0 &&
+      typeof watched === "number" &&
+      Number.isSafeInteger(watched) &&
+      watched >= 0
+    ) {
+      watching.push({
+        animeId,
+        watched,
+        updatedAt: typeof updated === "string" ? Date.parse(updated) || 0 : 0,
+      });
     }
-    if (data.length < limit) break;
   }
   return watching.sort((a, b) => b.updatedAt - a.updatedAt);
 }

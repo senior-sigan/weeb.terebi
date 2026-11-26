@@ -7,7 +7,7 @@ export interface Choice {
 }
 
 export interface Episode extends Choice {
-  artworkNumber: number | null;
+  mainNumber: number | null;
 }
 
 function activeRows(data: unknown, key: string) {
@@ -30,7 +30,7 @@ export async function episodes(id: number): Promise<Episode[]> {
     const number = row["episodeInt"];
     return {
       ...episodeChoice(row),
-      artworkNumber:
+      mainNumber:
         typeof number === "number" &&
         number >= 1 &&
         isMainEpisode(series["type"], row["episodeType"])

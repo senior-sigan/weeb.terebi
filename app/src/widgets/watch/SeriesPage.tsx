@@ -215,9 +215,9 @@ export function SeriesPage({
           <div className="episode-strip" ref={strip}>
             {list.items.map((episode) => {
               const extra =
-                episode.artworkNumber === null
+                episode.mainNumber === null
                   ? undefined
-                  : artwork?.episodes.get(episode.artworkNumber);
+                  : artwork?.episodes.get(episode.mainNumber);
               const title = extra?.title || episode.detail;
               return (
                 <button

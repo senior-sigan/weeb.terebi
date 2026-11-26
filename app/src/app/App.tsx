@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CatalogPage } from "../pages/catalog/CatalogPage";
 import { SearchPage } from "../pages/search/SearchPage";
+import { ShikimoriPage } from "../pages/shikimori/ShikimoriPage";
 import { remoteKey } from "../shared/tv/remote";
 import { type Section, Sidebar } from "../widgets/sidebar/Sidebar";
 
@@ -51,6 +52,8 @@ export function App() {
         </header>
         {section === "search" ? (
           <SearchPage active={!menu} onMenu={openMenu} />
+        ) : section === "shikimori" ? (
+          <ShikimoriPage active={!menu} onMenu={openMenu} />
         ) : (
           <CatalogPage
             key={`${section}-${revision}`}
@@ -67,7 +70,10 @@ export function App() {
             <kbd>↑↓←→</kbd> Выбор
           </span>
           <span>
-            <kbd>OK</kbd> {section === "search" ? "Выбрать" : "Подробнее"}
+            <kbd>OK</kbd>{" "}
+            {section === "search" || section === "shikimori"
+              ? "Выбрать"
+              : "Подробнее"}
           </span>
         </footer>
       </main>

@@ -1,9 +1,22 @@
 import SubtitlesOctopus from "@jellyfin/libass-wasm";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { stream } from "../../entities/episode/playback";
+import { passesWatchedThreshold } from "../../entities/episode/watched";
 import { request } from "../../shared/api/anime365";
-
+import { shikimoriAccount } from "../../shared/api/shikimoriSession";
+import {
+  saveWatchProgress,
+  type WatchProgress,
+} from "../../shared/api/watchSync";
 import { registerMediaKeys } from "../../shared/tv/mediaKeys";
+
+const SEEK_DEBOUNCE_MS = 400;
 
 function clock(seconds: number) {
   const value = Number.isFinite(seconds) ? Math.floor(seconds) : 0;
@@ -13,10 +26,12 @@ function clock(seconds: number) {
 export function Player({
   id,
   title,
+  progress,
   onBack,
 }: {
   id: number;
   title: string;
+  progress: WatchProgress | null;
   onBack: () => void;
 }) {
   const video = useRef<HTMLVideoElement>(null);
@@ -27,12 +42,72 @@ export function Player({
   const [paused, setPaused] = useState(true);
   const [time, setTime] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  const [syncStatus, setSyncStatus] = useState("");
   const hideTimer = useRef(0);
+  const pendingSeek = useRef<{ target: number; timer: number } | null>(null);
+  const mark = useRef<
+    { state: "ready"; retryAt: number } | { state: "pending" | "saved" }
+  >({
+    state: "ready",
+    retryAt: 0,
+  });
 
   function reveal() {
     setShowControls(true);
     window.clearTimeout(hideTimer.current);
     hideTimer.current = window.setTimeout(() => setShowControls(false), 3500);
+  }
+
+  const cancelSeek = useCallback(() => {
+    if (pendingSeek.current) {
+      window.clearTimeout(pendingSeek.current.timer);
+      pendingSeek.current = null;
+    }
+  }, []);
+
+  function seekBy(media: HTMLVideoElement, seconds: number) {
+    if (!Number.isFinite(media.duration)) return;
+    const from = pendingSeek.current?.target ?? media.currentTime;
+    const target = Math.max(0, Math.min(media.duration, from + seconds));
+    cancelSeek();
+    setTime(target);
+    const timer = window.setTimeout(() => {
+      pendingSeek.current = null;
+      const resume = media.ended && target < media.duration;
+      if (media.currentTime !== target) media.currentTime = target;
+      if (resume)
+        media.play().catch(() => setStatus("Не удалось продолжить видео"));
+    }, SEEK_DEBOUNCE_MS);
+    pendingSeek.current = { target, timer };
+  }
+
+  function recordProgress(media: HTMLVideoElement) {
+    if (
+      !shikimoriAccount() ||
+      !progress ||
+      mark.current.state !== "ready" ||
+      Date.now() < mark.current.retryAt ||
+      media.seeking ||
+      !passesWatchedThreshold(media.duration, media.currentTime)
+    )
+      return;
+    mark.current = { state: "pending" };
+    saveWatchProgress(progress).then(
+      () => {
+        mark.current = { state: "saved" };
+        if (video.current) {
+          setSyncStatus("Просмотр отмечен в Shikimori");
+          reveal();
+        }
+      },
+      () => {
+        mark.current = { state: "ready", retryAt: Date.now() + 15000 };
+        if (video.current) {
+          setSyncStatus("Не удалось отметить просмотр в Shikimori");
+          reveal();
+        }
+      },
+    );
   }
 
   useEffect(registerMediaKeys, []);
@@ -49,6 +124,7 @@ export function Player({
     let renderer: SubtitlesOctopus | undefined;
     function fail(message: string) {
       if (!active) return;
+      cancelSeek();
       media?.pause();
       setStatus(message);
       setFailed(true);
@@ -75,6 +151,7 @@ export function Player({
       }
       let next = 0;
       function playSource() {
+        cancelSeek();
         const url = source.urls[next++];
         if (!url) {
           fail("Не удалось воспроизвести видео");
@@ -98,13 +175,14 @@ export function Player({
     );
     return () => {
       active = false;
+      cancelSeek();
       media.onerror = null;
       if (renderer?.worker) renderer.dispose();
       media.pause();
       media.removeAttribute("src");
       media.load();
     };
-  }, [id, attempt]);
+  }, [id, attempt, cancelSeek]);
 
   function toggle() {
     if (failed) {
@@ -149,14 +227,7 @@ export function Player({
           case 39:
             event.preventDefault();
             event.stopPropagation();
-            if (Number.isFinite(media.duration))
-              media.currentTime = Math.max(
-                0,
-                Math.min(
-                  media.duration,
-                  media.currentTime + (event.keyCode === 37 ? -10 : 10),
-                ),
-              );
+            seekBy(media, event.keyCode === 37 ? -10 : 10);
             reveal();
             break;
           case 38:
@@ -179,8 +250,19 @@ export function Player({
         }}
         onPause={() => setPaused(true)}
         onWaiting={() => setStatus("Буферизация…")}
-        onTimeUpdate={() => setTime(video.current?.currentTime ?? 0)}
-        onEnded={onBack}
+        onTimeUpdate={(event) => {
+          if (!pendingSeek.current) setTime(event.currentTarget.currentTime);
+          recordProgress(event.currentTarget);
+        }}
+        onEnded={(event) => {
+          recordProgress(event.currentTarget);
+          if (
+            pendingSeek.current &&
+            pendingSeek.current.target < event.currentTarget.duration
+          )
+            return;
+          onBack();
+        }}
       />
       {(paused || showControls || status) && (
         <div className="play-hud">
@@ -189,6 +271,7 @@ export function Player({
             {status || (paused ? "Пауза" : "Воспроизведение")}　{clock(time)} /{" "}
             {clock(video.current?.duration ?? 0)}
           </p>
+          {syncStatus && <p role="status">{syncStatus}</p>}
           <span>
             <kbd>OK</kbd> {failed ? "Повторить" : "Пуск / пауза"}　{" "}
             <kbd>← →</kbd> 10 сек　 <kbd>Return</kbd> К переводам

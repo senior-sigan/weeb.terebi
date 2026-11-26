@@ -5,10 +5,10 @@ export async function fetchWatchQueue(): Promise<{
   items: AnimeTile[];
   notice?: string;
 }> {
-  if (!hasShikimoriProfile)
+  if (!hasShikimoriProfile())
     return {
       items: [],
-      notice: "Укажите SHIKIMORI_USER_ID в настройках сборки",
+      notice: "Подключите профиль в разделе Shikimori",
     };
 
   const watching = await fetchWatching();

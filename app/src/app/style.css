@@ -274,6 +274,78 @@ kbd {
 .rail-item {
   margin-bottom: 0.35vw;
 }
+.shikimori-icon {
+  position: relative;
+  width: 1.35vw;
+  height: 1.35vw;
+  margin: 0 1.325vw;
+  border: 0.13vw solid currentColor;
+  border-radius: 50%;
+}
+.shikimori-icon::before,
+.shikimori-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: currentColor;
+}
+.shikimori-icon::before {
+  top: 0.17vw;
+  width: 0.38vw;
+  height: 0.38vw;
+  border-radius: 50%;
+}
+.shikimori-icon::after {
+  bottom: 0.16vw;
+  width: 0.63vw;
+  height: 0.31vw;
+  border-radius: 0.31vw 0.31vw 0 0;
+}
+.shikimori-page {
+  flex: 1;
+  padding: 1.1vw 3.25vw;
+  font-size: 1.45vw;
+  outline: 0;
+}
+.shikimori-page form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.shikimori-page p {
+  max-width: 60vw;
+  margin: 0 0 1.2vw;
+  line-height: 1.4;
+}
+.shikimori-page button,
+.shikimori-page input {
+  padding: 0.65vw 1vw;
+  border-radius: 0.45vw;
+  background: #303339;
+}
+.shikimori-page button:focus {
+  background: var(--accent);
+  color: var(--bg);
+}
+.shikimori-page button:disabled {
+  opacity: 0.55;
+}
+.shikimori-page label,
+.shikimori-page p[role="alert"] {
+  margin-top: 1.2vw;
+}
+.shikimori-page input {
+  width: 42vw;
+  margin: 0.45vw 0 0.8vw;
+  border: 0.15vw solid transparent;
+  color: var(--ink);
+  font: inherit;
+}
+.shikimori-page input:focus {
+  border-color: var(--accent);
+  outline: 0;
+}
 .current {
   color: var(--accent);
   background: #2a2e24;
@@ -545,13 +617,16 @@ kbd {
   font-size: 1.25vw;
 }
 .choice-list {
-  border: 0;
-  margin: 0;
-  padding: 0;
   min-width: 0;
   min-height: 0;
   overflow: auto;
   flex: 1;
+}
+.choice-list fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
 }
 .choice-list button {
   display: block;

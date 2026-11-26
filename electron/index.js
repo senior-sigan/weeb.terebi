@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 
 let win;
@@ -15,6 +15,15 @@ function createWindow() {
     },
   });
   win.setMenu(null);
+  win.webContents.on("new-window", (event, url) => {
+    const target = new URL(url);
+    if (
+      target.origin !== "https://shikimori.io" ||
+      target.pathname !== "/oauth/authorize"
+    ) return;
+    event.preventDefault();
+    shell.openExternal(url);
+  });
   win.webContents.setUserAgent(
     "Mozilla/5.0 (SMART-TV; LINUX; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) 69.0.3497.106/5.5 TV Safari/537.36"
   );

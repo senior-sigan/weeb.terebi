@@ -16,6 +16,19 @@ type Result =
   | { kind: "error"; message: string }
   | { kind: "ready"; items: Choice[] };
 
+function focusChoice(
+  list: HTMLDivElement,
+  button: HTMLButtonElement | undefined,
+) {
+  if (!button) return;
+  const view = list.getBoundingClientRect();
+  const row = button.getBoundingClientRect();
+  if (row.top < view.top) list.scrollTop -= Math.ceil(view.top - row.top);
+  else if (row.bottom > view.bottom)
+    list.scrollTop += Math.ceil(row.bottom - view.bottom);
+  button.focus({ preventScroll: true });
+}
+
 export function ChoiceList({
   id,
   load,
@@ -25,7 +38,7 @@ export function ChoiceList({
   onBack,
 }: Props) {
   const [result, setResult] = useState<Result>({ kind: "loading" });
-  const list = useRef<HTMLFieldSetElement>(null);
+  const list = useRef<HTMLDivElement>(null);
   const selected = useRef(0);
 
   useEffect(() => {
@@ -51,7 +64,7 @@ export function ChoiceList({
   useLayoutEffect(() => {
     if (visible && list.current) {
       const buttons = list.current.querySelectorAll("button");
-      buttons[selected.current]?.focus();
+      focusChoice(list.current, buttons[selected.current]);
     }
   }, [visible, result.kind]);
 
@@ -59,78 +72,78 @@ export function ChoiceList({
     <section hidden={!visible} className="choice-panel">
       <h3>Переводы</h3>
       <p className="choice-episode">{heading}</p>
-      <fieldset
-        aria-label="Переводы"
-        className="choice-list"
-        ref={list}
-        onKeyDown={(event) => {
-          const key = remoteKey(event);
-          const step =
-            key === "ArrowUp" || (key === "Tab" && event.shiftKey)
-              ? -1
-              : key === "ArrowDown" || key === "Tab"
-                ? 1
-                : 0;
-          if (!step || !list.current) return;
-          event.preventDefault();
-          const buttons = list.current.querySelectorAll("button");
-          const next = selected.current + step;
-          const index =
-            key === "Tab"
-              ? (next + buttons.length) % buttons.length
-              : Math.max(0, Math.min(buttons.length - 1, next));
-          buttons[index]?.focus();
-        }}
-      >
-        {result.kind === "loading" && <p role="status">Загрузка…</p>}
-        {result.kind === "error" && (
-          <>
-            <p role="alert">{result.message}</p>
-            <button
-              type="button"
-              onFocus={() => {
-                selected.current = 0;
-              }}
-              onClick={() => setResult({ kind: "loading" })}
-            >
-              Повторить
-            </button>
-          </>
-        )}
-        {result.kind === "ready" && !result.items.length && (
-          <p>Пока ничего нет</p>
-        )}
-        {result.kind === "ready" &&
-          result.items.map((item, index) => (
-            <button
-              key={item.id}
-              data-choice={item.id}
-              type="button"
-              onFocus={() => {
-                selected.current = index;
-              }}
-              onClick={() => onSelect(item)}
-            >
-              <strong>{item.title}</strong>
-              {item.detail && <small>{item.detail}</small>}
-            </button>
-          ))}
-        <button
-          className="back-choice"
-          type="button"
-          onFocus={() => {
-            selected.current =
-              result.kind === "ready"
-                ? result.items.length
-                : result.kind === "error"
+      <div className="choice-list" ref={list}>
+        <fieldset
+          aria-label="Переводы"
+          onKeyDown={(event) => {
+            const key = remoteKey(event);
+            const step =
+              key === "ArrowUp" || (key === "Tab" && event.shiftKey)
+                ? -1
+                : key === "ArrowDown" || key === "Tab"
                   ? 1
                   : 0;
+            if (!step || !list.current) return;
+            event.preventDefault();
+            const buttons = list.current.querySelectorAll("button");
+            const next = selected.current + step;
+            const index =
+              key === "Tab"
+                ? (next + buttons.length) % buttons.length
+                : Math.max(0, Math.min(buttons.length - 1, next));
+            focusChoice(list.current, buttons[index]);
           }}
-          onClick={onBack}
         >
-          ← Назад
-        </button>
-      </fieldset>
+          {result.kind === "loading" && <p role="status">Загрузка…</p>}
+          {result.kind === "error" && (
+            <>
+              <p role="alert">{result.message}</p>
+              <button
+                type="button"
+                onFocus={() => {
+                  selected.current = 0;
+                }}
+                onClick={() => setResult({ kind: "loading" })}
+              >
+                Повторить
+              </button>
+            </>
+          )}
+          {result.kind === "ready" && !result.items.length && (
+            <p>Пока ничего нет</p>
+          )}
+          {result.kind === "ready" &&
+            result.items.map((item, index) => (
+              <button
+                key={item.id}
+                data-choice={item.id}
+                type="button"
+                onFocus={() => {
+                  selected.current = index;
+                }}
+                onClick={() => onSelect(item)}
+              >
+                <strong>{item.title}</strong>
+                {item.detail && <small>{item.detail}</small>}
+              </button>
+            ))}
+          <button
+            className="back-choice"
+            type="button"
+            onFocus={() => {
+              selected.current =
+                result.kind === "ready"
+                  ? result.items.length
+                  : result.kind === "error"
+                    ? 1
+                    : 0;
+            }}
+            onClick={onBack}
+          >
+            ← Назад
+          </button>
+        </fieldset>
+      </div>
     </section>
   );
 }

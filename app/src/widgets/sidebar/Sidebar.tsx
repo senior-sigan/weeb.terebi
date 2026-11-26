@@ -5,6 +5,7 @@ const menuItems = [
   { section: "home", title: "Главная" },
   { section: "catalog", title: "Список аниме" },
   { section: "search", title: "Поиск" },
+  { section: "shikimori", title: "Shikimori" },
 ] as const;
 
 export type Section = (typeof menuItems)[number]["section"];
@@ -100,7 +101,7 @@ export function Sidebar({
             {open && title}
           </button>
         ))}
-        {open && section !== "search" && (
+        {open && (section === "home" || section === "catalog") && (
           <button
             id="refresh-menu"
             className="rail-item"

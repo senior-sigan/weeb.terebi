@@ -8,6 +8,7 @@
     <!-- Anime 365 selects a CDN host for each media URL. -->
     <access origin="*"/>
     <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
     <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
     <content src="index.html"/>
     <icon src="icon.jpg"/>

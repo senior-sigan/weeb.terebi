@@ -13,6 +13,11 @@ if (
     Number(shikimoriUserId) < 1)
 )
   throw new Error("SHIKIMORI_USER_ID должен быть положительным целым числом");
+const shikimoriClientId = process.env.SHIKIMORI_CLIENT_ID?.trim() ?? "";
+const shikimoriClientSecret =
+  process.env.SHIKIMORI_CLIENT_SECRET?.trim() ||
+  process.env.SHIKIMORI_CLIENT_SECRET_ID?.trim() ||
+  "";
 
 await mkdir("dist", { recursive: true });
 await build({
@@ -26,6 +31,8 @@ await build({
   define: {
     __ACCESS_TOKEN__: JSON.stringify(token),
     __SHIKIMORI_USER_ID__: JSON.stringify(shikimoriUserId),
+    __SHIKIMORI_CLIENT_ID__: JSON.stringify(shikimoriClientId),
+    __SHIKIMORI_CLIENT_SECRET__: JSON.stringify(shikimoriClientSecret),
     "process.env.NODE_ENV": '"production"',
   },
 });
